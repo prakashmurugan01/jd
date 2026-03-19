@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💖 Ammu Care System 💖</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --pink:    #ff6eb4;
+    --deep:    #c2185b;
+    --lavender:#d8b4fe;
+    --soft:    #fce4ec;
+    --night:   #0d0221;
+    --mid:     #1a0533;
+    --card:    rgba(255,255,255,0.07);
+    --glow:    0 0 30px rgba(255,110,180,0.4);
+
+    /* Fluid sizing tokens */
+    --fs-xs:   clamp(.72rem,  1.8vw, .82rem);
+    --fs-sm:   clamp(.82rem,  2vw,   .95rem);
+    --fs-base: clamp(.95rem,  2.2vw, 1.05rem);
+    --fs-lg:   clamp(1.3rem,  3.5vw, 1.6rem);
+    --fs-xl:   clamp(1.5rem,  4.5vw, 1.9rem);
+    --fs-emoji:clamp(2.8rem,  7vw,   3.8rem);
+    --pad-x:   clamp(1.2rem,  5vw,   2.8rem);
+    --pad-y:   clamp(1.6rem,  4vw,   3rem);
+    --radius:  clamp(18px,    3vw,   28px);
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: radial-gradient(ellipse at 60% 0%, #2d0a4e 0%, #0d0221 55%, #060010 100%);
+    font-family: 'Nunito', sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(.8rem, 3vw, 2rem);
+  }
+
+  /* ── Stars ── */
+  .stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .star {
+    position: absolute; border-radius: 50%; background: #fff;
+    animation: twinkle var(--d, 3s) ease-in-out infinite alternate; opacity: 0;
+  }
+  @keyframes twinkle { from{opacity:.1;transform:scale(1)} to{opacity:.9;transform:scale(1.4)} }
+
+  /* ── Floating hearts ── */
+  .hearts { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .heart {
+    position: absolute; bottom: -40px; font-size: var(--fs, 18px);
+    animation: floatUp var(--d2, 8s) ease-in infinite; opacity: 0;
+  }
+  @keyframes floatUp {
+    0%  { transform: translateY(0) rotate(-10deg); opacity: 0; }
+    10% { opacity: .7; }
+    90% { opacity: .3; }
+    100%{ transform: translateY(-110vh) rotate(10deg); opacity: 0; }
+  }
+
+  /* ── Card ── */
+  .container {
+    position: relative; z-index: 1;
+    width: 100%;
+    max-width: 520px;
+    padding: var(--pad-y) var(--pad-x);
+    background: rgba(30, 5, 60, 0.65);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,110,180,0.25);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 60px rgba(0,0,0,0.6), var(--glow);
+    animation: fadeUp .8s ease both;
+    transition: background .5s ease;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(36px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── Header ── */
+  .header { text-align: center; margin-bottom: clamp(1.2rem, 3vw, 2rem); }
+  .header .emoji-row {
+    font-size: clamp(1.8rem, 5vw, 2.4rem);
+    letter-spacing: .3rem; margin-bottom: .5rem;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.12)} }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: var(--fs-xl);
+    background: linear-gradient(135deg, #ff9de2, #ff6eb4, #c77dff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.3;
+  }
+  .header p { font-size: var(--fs-xs); color: rgba(255,182,220,0.7); margin-top: .35rem; letter-spacing: .08em; }
+
+  /* ── Steps ── */
+  .step { display: none; animation: slideIn .45s ease both; }
+  .step.active { display: block; }
+  @keyframes slideIn { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+
+  label {
+    display: block;
+    font-size: var(--fs-sm);
+    color: #e9b4d8;
+    margin-bottom: .55rem;
+    letter-spacing: .05em;
+    font-weight: 600;
+  }
+
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    padding: clamp(.65rem, 2vw, .9rem) clamp(.9rem, 2.5vw, 1.2rem);
+    background: rgba(255,255,255,0.06);
+    border: 1.5px solid rgba(255,110,180,0.3);
+    border-radius: 14px;
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: var(--fs-base);
+    outline: none;
+    transition: border-color .3s, box-shadow .3s;
+    /* Prevent iOS zoom on focus */
+    -webkit-text-size-adjust: 100%;
+  }
+  input:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(255,110,180,0.18); }
+  /* Prevent iOS zoom: keep font-size >= 16px on mobile */
+  @media (max-width: 480px) {
+    input[type="text"], input[type="number"] { font-size: 16px; }
+  }
+
+  /* ── Toggle buttons (yes/no) ── */
+  .toggle-group { display: flex; gap: clamp(.6rem, 2vw, 1rem); margin-top: .3rem; }
+  .toggle-btn {
+    flex: 1;
+    padding: clamp(.65rem, 2vw, .9rem) clamp(.5rem, 2vw, 1rem);
+    border: 2px solid rgba(255,110,180,0.3);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.6);
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(.92rem, 2.5vw, 1.05rem);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .25s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .toggle-btn:hover  { border-color: var(--pink); color: #fff; background: rgba(255,110,180,0.1); }
+  .toggle-btn:active { transform: scale(.97); }
+  .toggle-btn.selected {
+    background: linear-gradient(135deg, #ff6eb4, #c77dff);
+    border-color: transparent;
+    color: #fff;
+    box-shadow: 0 4px 18px rgba(255,110,180,0.45);
+  }
+
+  /* ── Next button ── */
+  .btn {
+    width: 100%;
+    margin-top: clamp(1rem, 3vw, 1.5rem);
+    padding: clamp(.75rem, 2.5vw, 1rem);
+    background: linear-gradient(135deg, #ff6eb4 0%, #c77dff 100%);
+    border: none; border-radius: 14px;
+    color: #fff; font-family: 'Nunito', sans-serif;
+    font-size: clamp(.95rem, 2.5vw, 1.1rem);
+    font-weight: 700;
+    cursor: pointer; letter-spacing: .04em;
+    box-shadow: 0 4px 20px rgba(255,110,180,0.4);
+    transition: transform .2s, box-shadow .2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 48px; /* accessibility touch target */
+  }
+  .btn:hover  { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(255,110,180,0.55); }
+  .btn:active { transform: translateY(0) scale(.98); }
+
+  /* ── Result ── */
+  #result { display: none; text-align: center; }
+  #result.active { display: block; animation: popIn .6s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes popIn { from{opacity:0;transform:scale(.7)} to{opacity:1;transform:scale(1)} }
+
+  .result-emoji { font-size: var(--fs-emoji); margin-bottom: .8rem; }
+  .result-title {
+    font-family: 'Playfair Display', serif;
+    font-size: var(--fs-lg);
+    background: linear-gradient(135deg, #ff9de2, #c77dff);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    margin-bottom: 1rem;
+    line-height: 1.35;
+  }
+  .result-lines { list-style: none; display: flex; flex-direction: column; gap: clamp(.35rem, 1.5vw, .55rem); text-align: left; }
+  .result-lines li {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,110,180,0.18);
+    border-radius: 12px;
+    padding: clamp(.55rem, 2vw, .75rem) clamp(.7rem, 2.5vw, 1rem);
+    font-size: clamp(.88rem, 2.2vw, .98rem);
+    color: #f0d4f0;
+    opacity: 0;
+    animation: lineReveal .4s ease forwards;
+    line-height: 1.5;
+  }
+  @keyframes lineReveal { to{opacity:1;transform:none} from{opacity:0;transform:translateY(10px)} }
+
+  .reset-btn {
+    margin-top: clamp(1.1rem, 3vw, 1.8rem);
+    background: transparent;
+    border: 1.5px solid rgba(255,110,180,0.4);
+    color: rgba(255,182,220,0.8);
+    padding: clamp(.5rem, 2vw, .65rem) clamp(1.2rem, 4vw, 2rem);
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(.82rem, 2vw, .95rem);
+    transition: all .25s;
+    touch-action: manipulation;
+    min-height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .reset-btn:hover { background: rgba(255,110,180,0.12); color: #fff; border-color: var(--pink); }
+
+  /* ── Glow line ── */
+  .divider {
+    height: 2px; margin: clamp(1rem, 3vw, 1.6rem) 0;
+    background: linear-gradient(90deg, transparent, var(--pink), transparent);
+    border-radius: 2px;
+  }
+
+  /* ── Night footer ── */
+  .footer { text-align: center; margin-top: clamp(1rem, 3vw, 1.6rem); font-size: var(--fs-xs); color: rgba(255,182,220,0.5); letter-spacing:.06em; }
+
+  /* ── Progress dots ── */
+  .dots { display: flex; justify-content: center; gap: clamp(.4rem, 1.5vw, .6rem); margin-bottom: clamp(1.2rem, 3vw, 1.8rem); }
+  .dot {
+    width: clamp(7px, 1.5vw, 10px); height: clamp(7px, 1.5vw, 10px);
+    border-radius: 50%;
+    background: rgba(255,110,180,0.25);
+    transition: background .3s, transform .3s;
+  }
+  .dot.done { background: var(--pink); transform: scale(1.2); }
+
+  .error { color: #ff8fab; font-size: var(--fs-xs); margin-top: .4rem; display: none; }
+  .error.show { display: block; }
+
+  @keyframes shake {
+    0%,100%{transform:rotate(0)} 20%{transform:rotate(-6deg)} 40%{transform:rotate(6deg)}
+    60%{transform:rotate(-4deg)} 80%{transform:rotate(4deg)}
+  }
+  .shake { animation: shake .5s ease; }
+
+  .comedy-badge {
+    display: inline-block;
+    background: linear-gradient(135deg,#ffcc00,#ff6b00);
+    color: #1a0000;
+    font-size: clamp(.65rem, 1.8vw, .75rem);
+    font-weight: 800;
+    padding: .22rem .7rem;
+    border-radius: 20px;
+    letter-spacing: .08em;
+    margin-bottom: .8rem;
+    text-transform: uppercase;
+  }
+
+  /* ════════════════════════════
+     RESPONSIVE BREAKPOINTS
+  ════════════════════════════ */
+
+  /* 📱 Mobile small (≤360px) */
+  @media (max-width: 360px) {
+    body { padding: .5rem; }
+    .container { border-radius: 18px; }
+    .header h1 { font-size: 1.35rem; }
+    .toggle-btn { font-size: .85rem; padding: .6rem .4rem; }
+    .result-lines li { font-size: .82rem; }
+  }
+
+  /* 📱 Mobile (≤480px) */
+  @media (max-width: 480px) {
+    body { align-items: flex-start; padding-top: 1rem; padding-bottom: 1rem; }
+    .container { margin: 0 auto; }
+    .result-title { font-size: 1.3rem; }
+    .result-emoji { font-size: 2.8rem; }
+  }
+
+  /* 📟 Tablet (481px – 768px) */
+  @media (min-width: 481px) and (max-width: 768px) {
+    .container { max-width: 480px; }
+    .header h1 { font-size: 1.7rem; }
+  }
+
+  /* 💻 Laptop (769px – 1199px) */
+  @media (min-width: 769px) and (max-width: 1199px) {
+    .container { max-width: 500px; }
+    .header h1 { font-size: 1.85rem; }
+    .btn:hover { transform: translateY(-3px); }
+  }
+
+  /* 🖥️ Desktop large (≥1200px) */
+  @media (min-width: 1200px) {
+    .container { max-width: 540px; }
+    .header h1 { font-size: 2rem; }
+    .result-emoji { font-size: 4rem; }
+    .result-title { font-size: 1.7rem; }
+  }
+
+  /* 🌙 Landscape mobile fix */
+  @media (max-height: 500px) and (orientation: landscape) {
+    body { align-items: flex-start; padding: .5rem; }
+    .header { margin-bottom: .8rem; }
+    .header .emoji-row { font-size: 1.5rem; margin-bottom: .2rem; }
+    .dots { margin-bottom: .8rem; }
+    .container { padding: 1rem 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+<!-- Floating hearts -->
+<div class="hearts" id="hearts"></div>
+
+<div class="container">
+  <div class="header">
+    <div class="emoji-row">💖✨🌙</div>
+    <h1>Ammu Care System</h1>
+    <p>Made with love, just for you 🌸</p>
+  </div>
+
+  <div class="dots">
+    <div class="dot done" id="d1"></div>
+    <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
+  </div>
+
+  <!-- Step 1: Name -->
+  <div class="step active" id="step1">
+    <label>Un peyar enna? 🌸</label>
+    <input type="text" id="nameInput" placeholder="Ungal peyar type pannunga..." autofocus>
+    <div class="error" id="nameErr">Peyar sollunga maaa 💕</div>
+    <button class="btn" onclick="goStep2()">Next →</button>
+  </div>
+
+  <!-- Step 2: Status -->
+  <div class="step" id="step2">
+    <label>Project work completed pannitiya? 📚</label>
+    <div class="toggle-group">
+      <button class="toggle-btn" id="yesBtn" onclick="selectStatus('yes')">✅ Yes</button>
+      <button class="toggle-btn" id="noBtn"  onclick="selectStatus('no')">❌ No</button>
+    </div>
+    <div class="error" id="statusErr">Yes or No select pannunga 💕</div>
+    <button class="btn" onclick="goStep3()">Next →</button>
+  </div>
+
+  <!-- Step 3: Time -->
+  <div class="step" id="step3">
+    <label>Ippo time enna? ⏰ (24-hour format)</label>
+    <input type="number" id="timeInput" placeholder="e.g. 22 for 10 PM" min="0" max="23">
+    <div class="error" id="timeErr">0 – 23 naduvula enter pannunga 💕</div>
+    <button class="btn" onclick="showResult()">Check 💖</button>
+  </div>
+
+  <!-- Result -->
+  <div id="result">
+    <div class="result-emoji" id="resEmoji"></div>
+    <div class="comedy-badge" id="resBadge"></div>
+    <div class="result-title" id="resTitle"></div>
+    <div class="divider"></div>
+    <ul class="result-lines" id="resLines"></ul>
+    <button class="reset-btn" onclick="reset()">🔄 Mela try pannunga</button>
+  </div>
+
+  <div class="footer">🌙 Happy morning maa &amp; Good night!</div>
+</div>
+
+<script>
+// ── Generate stars ──
+(function(){
+  const s = document.getElementById('stars');
+  for(let i=0;i<140;i++){
+    const el = document.createElement('div');
+    el.className='star';
+    const sz = Math.random()*2.5+.5;
+    el.style.cssText=`
+      width:${sz}px;height:${sz}px;
+      left:${Math.random()*100}%;top:${Math.random()*100}%;
+      --d:${(Math.random()*4+2).toFixed(1)}s;
+      animation-delay:${(Math.random()*5).toFixed(2)}s;
+    `;
+    s.appendChild(el);
+  }
+})();
+
+// ── Generate floating hearts ──
+(function spawnHearts(){
+  const c = document.getElementById('hearts');
+  const emojis = ['💖','💕','🌸','✨','💗','⭐','💓'];
+  function make(){
+    const el = document.createElement('div');
+    el.className='heart';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    const d = (Math.random()*10+7).toFixed(1);
+    el.style.cssText=`
+      left:${Math.random()*100}%;
+      --fs:${Math.floor(Math.random()*18+10)}px;
+      --d2:${d}s;
+      animation-delay:${(Math.random()*8).toFixed(1)}s;
+    `;
+    c.appendChild(el);
+    setTimeout(()=>el.remove(), (parseFloat(d)+parseFloat(el.style.animationDelay||0)+1)*1000);
+  }
+  for(let i=0;i<10;i++) setTimeout(make, i*800);
+  setInterval(make, 1200);
+})();
+
+// ── App state ──
+let state = { name:'', status:'', time:0 };
+
+function setDot(n){
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('done',i<n));
+}
+
+function goStep2(){
+  const v = document.getElementById('nameInput').value.trim();
+  const err = document.getElementById('nameErr');
+  if(!v){ err.classList.add('show'); return; }
+  err.classList.remove('show');
+  state.name = v;
+  switchStep('step1','step2');
+  setDot(2);
+}
+
+let selectedStatus = '';
+function selectStatus(s){
+  selectedStatus = s;
+  document.getElementById('yesBtn').classList.toggle('selected', s==='yes');
+  document.getElementById('noBtn').classList.toggle('selected',  s==='no');
+}
+
+function goStep3(){
+  const err = document.getElementById('statusErr');
+  if(!selectedStatus){ err.classList.add('show'); return; }
+  err.classList.remove('show');
+  state.status = selectedStatus;
+  switchStep('step2','step3');
+  setDot(3);
+  document.getElementById('timeInput').focus();
+}
+
+function showResult(){
+  const t = parseInt(document.getElementById('timeInput').value);
+  const err = document.getElementById('timeErr');
+  if(isNaN(t)||t<0||t>23){ err.classList.add('show'); return; }
+  err.classList.remove('show');
+  state.time = t;
+
+  const name = state.name;
+  const done = state.status === 'yes';
+
+  let emoji, title, lines, cardColor;
+
+  // 🎭 5 COMEDY CONDITIONS
+  if(done && t >= 22){
+    // ── OUTPUT 1: Night hero ──
+    cardColor = 'linear-gradient(135deg,#1a0533,#2d0845)';
+    emoji = '🏆😴';
+    title = `LEGEND! ${name} 💖`;
+    lines = [
+      '🎉 Project work mudichita?! Nee superhero da!',
+      '😴 Ippo thoogu maa — brain recharge venuma illaya?',
+      '🛌 Bed-ku poo, pillow waiting for you!',
+      '💖 Good night my dear Ammu kutty — sweet dreams!',
+      '👋 Tata! Bye! Go sleep already! 😂'
+    ];
+  } else if(!done && t >= 22){
+    // ── OUTPUT 2: Midnight disaster ──
+    cardColor = 'linear-gradient(135deg,#3b0000,#1a0533)';
+    emoji = '😡🔥';
+    title = `${name}... SERIOUSLY?! 😤`;
+    lines = [
+      '😱 Ippo time paarunga — rathiri 10 manikku project illa?!',
+      '🤣 Nee enna pannitu iruka — TikTok-aa? Reels-aa?',
+      '📚 Seekiram open pannu — laptop udaika pora naa?!',
+      '🥄 Finish pannaatha pochuna — tomorrow morning adi confirm! 🤣',
+      '😤 Last warning maa — WORK NOW or REGRET TOMORROW!'
+    ];
+  } else if(done && t >= 5 && t < 12){
+    // ── OUTPUT 3: Morning overachiever ──
+    cardColor = 'linear-gradient(135deg,#0a2a1a,#1a0533)';
+    emoji = '🌅🐔';
+    title = `Morning Hero ${name}! 😂`;
+    lines = [
+      '🐓 Kaalam-la ezhundhu project mudichita?! Nee chicken-aa?! 🤣',
+      '☀️ Sooraiya paathu work mudicha — respect da!',
+      '🏆 Intha maadhiri student-ku exam-la 100/100 confirm! 😂',
+      '☕ Oru coffee kudichitu rest eduthu maa — deserve panra!',
+      '💪 Morning champion! Nee-dhan Number 1 Ammu! 🌸'
+    ];
+  } else if(done && t >= 12 && t < 22){
+    // ── OUTPUT 4: Casual afternoon legend ──
+    cardColor = 'linear-gradient(135deg,#0d2040,#1a0533)';
+    emoji = '😎✅';
+    title = `Chill Mode ON! ${name} 😄`;
+    lines = [
+      '😎 Afternoon-la finish pannitiya?! Nee too relaxed maa! 🤣',
+      '🎮 Ippo game venum, series venum — enjoy panna time ithu!',
+      '🛋️ Sofa-la paduthu Netflix pottu rest eduthu maa!',
+      '💅 Work done = Queen mode ON — no one can stop you now!',
+      '💖 Nee best maa! Proud of you! 🌸😘'
+    ];
+  } else {
+    // ── OUTPUT 5: Daytime lazy disaster ──
+    cardColor = 'linear-gradient(135deg,#2a1500,#1a0533)';
+    emoji = '🦥😅';
+    title = `${name} — Lazy Mode Detected! 🤣`;
+    lines = [
+      '🦥 Innum mudikala?! Konjam velaya paaru maa!',
+      '📵 Phone vachu ungaludhan time povuthu — naan paatheruken! 😂',
+      '⏰ Deadline waiting... kallu maadhiri ukkaara vendam!',
+      '🤣 Adi vaanga waiting list-la naan first-la irruken!',
+      '🚀 GO GO GO — project finish pannu, aprom rest eduthu koo!'
+    ];
+  }
+
+  const outputLabels = ['🏆 Night Hero','😡 Midnight Disaster','🌅 Morning Legend','😎 Afternoon Chill','🦥 Lazy Mode'];
+  const outputIdx = done&&t>=22?0 : !done&&t>=22?1 : done&&t>=5&&t<12?2 : done&&t>=12&&t<22?3 : 4;
+
+  document.getElementById('resEmoji').textContent   = emoji;
+  document.getElementById('resBadge').textContent   = `Output ${outputIdx+1} — ${outputLabels[outputIdx]}`;
+  document.getElementById('resTitle').textContent   = title;
+  document.querySelector('.container').style.background = cardColor;
+  const ul = document.getElementById('resLines');
+  ul.innerHTML = '';
+  lines.forEach((l,i)=>{
+    const li = document.createElement('li');
+    li.textContent = l;
+    li.style.animationDelay = `${i*0.13+0.1}s`;
+    ul.appendChild(li);
+  });
+
+  // Shake emoji on roast outputs
+  if(outputIdx===1||outputIdx===4){
+    const em=document.getElementById('resEmoji');
+    em.classList.remove('shake');
+    void em.offsetWidth;
+    em.classList.add('shake');
+  }
+
+  switchStep('step3', null);
+  document.querySelectorAll('.dot').forEach(d=>d.classList.add('done'));
+  const r = document.getElementById('result');
+  r.style.display='block';
+  r.classList.add('active');
+}
+
+function switchStep(fromId, toId){
+  if(fromId) document.getElementById(fromId).classList.remove('active');
+  if(toId)   document.getElementById(toId).classList.add('active');
+}
+
+function reset(){
+  state = {name:'',status:'',time:0};
+  selectedStatus='';
+  document.getElementById('nameInput').value='';
+  document.getElementById('timeInput').value='';
+  document.getElementById('yesBtn').classList.remove('selected');
+  document.getElementById('noBtn').classList.remove('selected');
+  document.querySelector('.container').style.background = 'rgba(30, 5, 60, 0.65)';
+  document.getElementById('result').style.display='none';
+  document.getElementById('result').classList.remove('active');
+  switchStep(null,'step1');
+  setDot(1);
+  document.getElementById('nameInput').focus();
+}
+
+// Enter key support
+document.addEventListener('keydown', e=>{
+  if(e.key!=='Enter') return;
+  const s1=document.getElementById('step1');
+  const s2=document.getElementById('step2');
+  const s3=document.getElementById('step3');
+  if(s1.classList.contains('active')) goStep2();
+  else if(s2.classList.contains('active')) goStep3();
+  else if(s3.classList.contains('active')) showResult();
+});
+</script>
+</body>
+</html>
